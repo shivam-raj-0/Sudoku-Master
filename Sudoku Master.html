@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku Master</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      color: #343a40;
+    }
+    .sudoku-board {
+      display: grid;
+      grid-template-columns: repeat(9, 40px);
+      grid-gap: 2px;
+      margin: 20px auto;
+      width: fit-content;
+    }
+    .sudoku-cell {
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      font-size: 18px;
+    }
+    input[readonly] {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    .highlight {
+      border: 2px solid red;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Sudoku Master</h1>
+  <p class="lead">Train your brain with this puzzle!</p>
+  <div class="sudoku-board" id="sudoku-board"></div>
+  <div class="controls">
+    <button class="btn btn-primary" onclick="newGame()">New Game</button>
+    <button class="btn btn-success" onclick="checkSolution()">Check Solution</button>
+    <button class="btn btn-warning" onclick="resetBoard()">Reset</button>
+  </div>  <script>
+    const SIZE = 9;
+    let board = [];
+    let original = [];
+
+    function createBoard() {
+      const boardEl = document.getElementById("sudoku-board");
+      boardEl.innerHTML = "";
+      for (let i = 0; i < SIZE; i++) {
+        board[i] = [];
+        for (let j = 0; j < SIZE; j++) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.maxLength = 1;
+          input.classList.add("sudoku-cell", "form-control");
+          input.dataset.row = i;
+          input.dataset.col = j;
+          input.addEventListener("input", validateInput);
+          board[i][j] = input;
+          boardEl.appendChild(input);
+        }
+      }
+    }
+
+    function fillPuzzle(puzzle) {
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          const cell = board[i][j];
+          if (puzzle[i][j] !== 0) {
+            cell.value = puzzle[i][j];
+            cell.setAttribute("readonly", true);
+          } else {
+            cell.value = "";
+            cell.removeAttribute("readonly");
+          }
+        }
+      }
+    }
+
+    function newGame() {
+      const puzzle = generateSudoku();
+      original = puzzle.map(row => row.slice());
+      fillPuzzle(puzzle);
+    }
+
+    function resetBoard() {
+      if (!confirm("Are you sure you want to reset the puzzle?")) return;
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          if (!board[i][j].hasAttribute("readonly")) {
+            board[i][j].value = "";
+            board[i][j].classList.remove("highlight");
+          }
+        }
+      }
+    }
+
+    function validateInput(e) {
+      const val = e.target.value;
+      if (!/^[1-9]$/.test(val)) e.target.value = "";
+    }
+
+    function isBoardFull() {
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          if (board[i][j].value === "") return false;
+        }
+      }
+      return true;
+    }
+
+    function checkSolution() {
+      if (!isBoardFull()) {
+        alert("⚠️ Please fill all cells before checking the solution.");
+        return;
+      }
+
+      let valid = true;
+      clearHighlights();
+      for (let i = 0; i < SIZE; i++) {
+        const row = new Set();
+        const col = new Set();
+        for (let j = 0; j < SIZE; j++) {
+          const rVal = board[i][j].value;
+          const cVal = board[j][i].value;
+          if (row.has(rVal)) {
+            board[i][j].classList.add("highlight");
+            valid = false;
+          } else {
+            row.add(rVal);
+          }
+          if (col.has(cVal)) {
+            board[j][i].classList.add("highlight");
+            valid = false;
+          } else {
+            col.add(cVal);
+          }
+        }
+      }
+      alert(valid ? "✅ Congratulations! Sudoku Solved!" : "❌ Some entries are invalid!");
+    }
+
+    function clearHighlights() {
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          board[i][j].classList.remove("highlight");
+        }
+      }
+    }
+
+    function generateSudoku() {
+      // Static puzzle for demo
+      return [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9]
+      ];
+    }
+
+    createBoard();
+    newGame();
+  </script></body>
+</html>
